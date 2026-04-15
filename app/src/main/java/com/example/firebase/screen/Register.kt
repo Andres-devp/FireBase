@@ -24,10 +24,8 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.NavHostController
 import com.example.firebase.model.validEmailAddress
 import com.example.firebase.navigation.AppScreens
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.auth.userProfileChangeRequest
-import com.google.firebase.ktx.Firebase
+import com.example.firebase.auth
+import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -72,7 +70,6 @@ class RegisterViewModel : ViewModel() {
 fun Register(navController: NavHostController, model: RegisterViewModel) {
     val state by model.registerState.collectAsState()
     val context = LocalContext.current
-    val auth = Firebase.auth
 
     Column(
         modifier = Modifier
@@ -127,9 +124,9 @@ fun Register(navController: NavHostController, model: RegisterViewModel) {
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
                                 val user = auth.currentUser
-                                val profileUpdates = userProfileChangeRequest {
-                                    displayName = "${state.nombre} ${state.apellido}"
-                                }
+                                val profileUpdates = UserProfileChangeRequest.Builder()
+                                    .setDisplayName("${state.nombre} ${state.apellido}")
+                                    .build()
                                 user?.updateProfile(profileUpdates)?.addOnCompleteListener { updateTask ->
                                     if (updateTask.isSuccessful) {
                                         navController.navigate(AppScreens.home.name) {

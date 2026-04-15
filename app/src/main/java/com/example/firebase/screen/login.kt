@@ -29,9 +29,7 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.NavHostController
 import com.example.firebase.model.validEmailAddress
 import com.example.firebase.navigation.AppScreens
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
+import com.example.firebase.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -67,7 +65,6 @@ fun Login(navController: NavHostController, model: LoginViewModel) {
 
     val user by model.loginState.collectAsState()
     val context = LocalContext.current
-    val auth = Firebase.auth
 
     LaunchedEffect(Unit) {
         if (auth.currentUser != null) {
