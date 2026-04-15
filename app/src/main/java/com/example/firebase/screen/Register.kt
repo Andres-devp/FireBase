@@ -28,6 +28,22 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.ktx.Firebase
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.asImageBitmap
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -74,6 +90,19 @@ fun Register(navController: NavHostController, model: RegisterViewModel) {
     val context = LocalContext.current
     val auth = Firebase.auth
 
+    val imageUri = remember { mutableStateOf<Uri?>(null) }
+    val bitmap = remember { mutableStateOf<Bitmap?>(null) }
+
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        imageUri.value = uri
+        bitmap.value = null
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { b: Bitmap? ->
+        bitmap.value = b
+        imageUri.value = null
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -81,6 +110,24 @@ fun Register(navController: NavHostController, model: RegisterViewModel) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        if (imageUri.value != null) {
+            val bmp = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val source = ImageDecoder.createSource(context.contentResolver, imageUri.value!!)
+                ImageDecoder.decodeBitmap(source)
+            } else {
+                MediaStore.Images.Media.getBitmap(context.contentResolver, imageUri.value)
+            }
+            Image(bitmap = bmp.asImageBitmap(), contentDescription = null, modifier = Modifier.size(100.dp))
+        } else if (bitmap.value != null) {
+            Image(bitmap = bitmap.value!!.asImageBitmap(), contentDescription = null, modifier = Modifier.size(100.dp))
+        }
+
+        Row(modifier = Modifier.padding(bottom = 16.dp)) {
+            Button(onClick = { galleryLauncher.launch("image/*") }) { Text("Gallery") }
+            Spacer(modifier = Modifier.width(16.dp))
+            Button(onClick = { cameraLauncher.launch(null) }) { Text("Camera") }
+        }
+
         TextField(
             value = state.nombre,
             onValueChange = { model.updateName(it) },
@@ -129,6 +176,7 @@ fun Register(navController: NavHostController, model: RegisterViewModel) {
                                 val user = auth.currentUser
                                 val profileUpdates = userProfileChangeRequest {
                                     displayName = "${state.nombre} ${state.apellido}"
+                                    photoUri = Uri.parse("path/to/pic")
                                 }
                                 user?.updateProfile(profileUpdates)?.addOnCompleteListener { updateTask ->
                                     if (updateTask.isSuccessful) {

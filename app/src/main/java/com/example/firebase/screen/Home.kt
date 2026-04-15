@@ -8,6 +8,8 @@ import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -52,7 +54,17 @@ fun Home(navController: NavHostController) {
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
-            Text("Welcome to Home!")
+            val user = Firebase.auth.currentUser
+            
+            Text(
+                text = "Bienvenido", 
+                style = MaterialTheme.typography.headlineMedium, 
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(text = user?.displayName ?: "Sin Nombre")
+            Text(text = user?.email ?: "Sin Email")
+            Text(text = user?.photoUrl?.toString() ?: "Sin Foto")
         }
     }
 }
